@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎵 Sangeet Academy - Student Fee Management</title>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Leaflet CSS for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        /* ----- GLOBAL STYLES ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: #f8f5f0;
+            color: #2d2d2d;
+        }
+
+        /* ----- NAVBAR (Music Theme) ----- */
+        .navbar {
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border-bottom: 3px solid #e94560;
+        }
+        .logo {
+            color: #fff;
+            font-size: 28px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .logo i {
+            color: #e94560;
+            margin-right: 10px;
+        }
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+        .nav-links a {
+            color: #ddd;
+            text-decoration: none;
+            font-size: 16px;
+            transition: 0.3s;
+            padding: 8px 12px;
+            border-radius: 30px;
+        }
+        .nav-links a:hover {
+            color: #fff;
+            background: rgba(233, 69, 96, 0.3);
+        }
+        .nav-links .login-btn {
+            background: #e94560;
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+        }
+        .nav-links .login-btn:hover {
+            background: #c73652;
+            transform: scale(1.05);
+        }
+        .nav-links .register-btn {
+            background: transparent;
+            border: 2px solid #e94560;
+            color: #e94560;
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-weight: bold;
+        }
+        .nav-links .register-btn:hover {
+            background: #e94560;
+            color: #fff;
+        }
+
+        /* ----- LOGIN / REGISTER MODAL (Hidden by default) ----- */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .modal-content {
+            background: #fff;
+            padding: 30px 40px;
+            border-radius: 20px;
+            width: 380px;
+            max-width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+            animation: slideDown 0.4s ease;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-content .close {
+            position: absolute;
+            top: 12px;
+            right: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #888;
+        }
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: #1a1a2e;
+            text-align: center;
+        }
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 30px;
+            font-size: 14px;
+        }
+        .modal-content button {
+            width: 100%;
+            padding: 12px;
+            background: #e94560;
+            color: #fff;
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .modal-content button:hover {
+            background: #c73652;
+        }
+        .modal-content .switch-link {
+            text-align: center;
+            margin-top: 12px;
+            color: #555;
+        }
+        .modal-content .switch-link span {
+            color: #e94560;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* ----- HERO SLIDER (Auto-slide) ----- */
+        .slider-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        .slider {
+            display: flex;
+            width: 300%;
+            height: 100%;
+            animation: slide 12s infinite;
+        }
+        .slide {
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 48px;
+            font-weight: bold;
+            text-shadow: 2px 2px 20px rgba(0,0,0,0.7);
+        }
+        .slide:nth-child(1) { background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=1200'); }
+        .slide:nth-child(2) { background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=1200'); }
+        .slide:nth-child(3) { background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=1200'); }
+        .slide span { background: rgba(0,0,0,0.5); padding: 20px 40px; border-radius: 50px; backdrop-filter: blur(5px); }
+        @keyframes slide {
+            0% { transform: translateX(0); }
+            33% { transform: translateX(0); }
+            38% { transform: translateX(-33.33%); }
+            71% { transform: translateX(-33.33%); }
+            76% { transform: translateX(-66.66%); }
+            100% { transform: translateX(-66.66%); }
+        }
+
+        /* ----- SECTION HEADINGS ----- */
+        .section-title {
+            text-align: center;
+            font-size: 36px;
+            margin: 50px 0 30px;
+            color: #1a1a2e;
+            position: relative;
+        }
+        .section-title::after {
+            content: '';
+            width: 80px;
+            height: 4px;
+            background: #e94560;
+            display: block;
+            margin: 10px auto;
+            border-radius: 10px;
+        }
+
+        /* ----- TEACHERS ----- */
+        .teachers-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            padding: 0 30px;
+        }
+        .teacher-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 25px;
+            width: 260px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: 0.3s;
+            border-bottom: 5px solid #e94560;
+        }
+        .teacher-card:hover { transform: translateY(-10px); }
+        .teacher-card img {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #e94560;
+        }
+        .teacher-card h3 { margin: 15px 0 5px; }
+        .teacher-card .skills {
+            color: #e94560;
+            font-weight: bold;
+        }
+        .teacher-card .qualification {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* ----- INSTRUMENT CARDS (Template) ----- */
+        .instruments-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 25px;
+            padding: 0 30px;
+        }
+        .instrument-card {
+            background: #fff;
+            border-radius: 20px;
+            width: 230px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: 0.3s;
+        }
+        .instrument-card:hover { transform: scale(1.03); }
+        .instrument-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+        .instrument-card .info {
+            padding: 15px;
+            text-align: center;
+        }
+        .instrument-card .info h4 { margin-bottom: 5px; }
+        .instrument-card .info p { color: #777; font-size: 14px; }
+
+        /* ----- LOCATION MAP (Leaflet) ----- */
+        .map-container {
+            padding: 0 30px;
+            margin: 20px 0;
+        }
+        #academyMap {
+            height: 400px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            z-index: 1;
+        }
+
+        /* ----- FEE & CLASS TABLE ----- */
+        .fee-table-container {
+            padding: 0 30px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        th {
+            background: #1a1a2e;
+            color: #fff;
+            padding: 15px;
+            text-align: left;
+        }
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        tr:hover { background: #f9f5f0; }
+
+        /* ----- CONTACT & ABOUT ----- */
+        .contact-section {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+            padding: 30px;
+            background: #1a1a2e;
+            color: #fff;
+            margin-top: 40px;
+        }
+        .contact-section div { max-width: 400px; }
+        .contact-section i { color: #e94560; margin-right: 10px; }
+
+        .about-section {
+            padding: 30px;
+            text-align: center;
+            background: #fff;
+            margin: 20px 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        /* ----- STUDENT DASHBOARD (Demo) ----- */
+        .dashboard-demo {
+            background: #fff;
+            margin: 30px;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border-left: 8px solid #e94560;
+        }
+        .dashboard-demo h3 { color: #1a1a2e; margin-bottom: 15px; }
+        .dashboard-demo .fee-status {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .fee-status .card {
+            background: #f8f5f0;
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 150px;
+        }
+        .fee-status .card .amount { font-size: 24px; font-weight: bold; color: #e94560; }
+        .pay-btn {
+            background: #27ae60;
+            color: #fff;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .pay-btn:hover { background: #1e8449; }
+        .history-table {
+            margin-top: 20px;
+            width: 100%;
+            font-size: 14px;
+        }
+        .history-table th { background: #16213e; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar { flex-direction: column; gap: 10px; }
+            .nav-links { flex-wrap: wrap; justify-content: center; }
+            .slider-container { height: 280px; }
+            .slide { font-size: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ========== NAVBAR ========== -->
+<nav class="navbar">
+    <div class="logo"><i class="fas fa-music"></i> Sangeet Academy</div>
+    <div class="nav-links">
+        <a href="#">Home</a>
+        <a href="#teachers">Teachers</a>
+        <a href="#instruments">Instruments</a>
+        <a href="#fee">Fee</a>
+        <a href="#contact">Contact</a>
+        <a href="#about">About</a>
+        <a href="#" class="login-btn" id="loginOpen"><i class="fas fa-sign-in-alt"></i> Login</a>
+        <a href="#" class="register-btn" id="registerOpen"><i class="fas fa-user-plus"></i> Register</a>
+    </div>
+</nav>
+
+<!-- ========== LOGIN MODAL ========== -->
+<div class="modal" id="loginModal">
+    <div class="modal-content">
+        <span class="close" id="loginClose">&times;</span>
+        <h2><i class="fas fa-music"></i> Student Login</h2>
+        <input type="text" placeholder="Username / Email" />
+        <input type="password" placeholder="Password" />
+        <button><i class="fas fa-arrow-right"></i> Login</button>
+        <div class="switch-link">New student? <span id="switchToRegister">Register here</span></div>
+    </div>
+</div>
+
+<!-- ========== REGISTER MODAL ========== -->
+<div class="modal" id="registerModal">
+    <div class="modal-content">
+        <span class="close" id="registerClose">&times;</span>
+        <h2><i class="fas fa-user-graduate"></i> Student Register</h2>
+        <input type="text" placeholder="Full Name" />
+        <input type="email" placeholder="Email" />
+        <input type="password" placeholder="Password" />
+        <input type="text" placeholder="Location (City)" />
+        <button><i class="fas fa-user-plus"></i> Register</button>
+        <div class="switch-link">Already have account? <span id="switchToLogin">Login</span></div>
+    </div>
+</div>
+
+<!-- ========== HERO SLIDER ========== -->
+<div class="slider-container">
+    <div class="slider">
+        <div class="slide"><span>🎸 Learn Guitar & Drums</span></div>
+        <div class="slide"><span>🎹 Piano & Vocal Training</span></div>
+        <div class="slide"><span>🥁 Tabla & Classical Music</span></div>
+    </div>
+</div>
+
+<!-- ========== TEACHERS SECTION ========== -->
+<h2 class="section-title" id="teachers">🎤 Our Guruji's</h2>
+<div class="teachers-container">
+    <div class="teacher-card">
+        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Teacher">
+        <h3>Pandit Ravi Shankar</h3>
+        <div class="skills">🎵 Sitar | Tabla | Vocal</div>
+        <div class="qualification">M.A. Music, 15+ yrs exp.</div>
+    </div>
+    <div class="teacher-card">
+        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Teacher">
+        <h3>Ms. Meera Das</h3>
+        <div class="skills">🎹 Piano | Keyboard | Western</div>
+        <div class="qualification">B.Mus., 8 yrs exp.</div>
+    </div>
+    <div class="teacher-card">
+        <img src="https://randomuser.me/api/portraits/men/67.jpg" alt="Teacher">
+        <h3>Ustad Zakir Khan</h3>
+        <div class="skills">🥁 Tabla | Dholak | Percussion</div>
+        <div class="qualification">Ph.D. in Music, 20 yrs exp.</div>
+    </div>
+</div>
+
+<!-- ========== INSTRUMENTS CARDS ========== -->
+<h2 class="section-title" id="instruments">🎶 Instruments We Teach</h2>
+<div class="instruments-container">
+    <div class="instrument-card">
+        <img src="https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=400" alt="Guitar">
+        <div class="info"><h4>Guitar</h4><p>Acoustic & Electric</p></div>
+    </div>
+    <div class="instrument-card">
+        <img src="https://images.unsplash.com/photo-1552422535-c45813c61732?w=400" alt="Piano">
+        <div class="info"><h4>Piano</h4><p>Classical & Jazz</p></div>
+    </div>
+    <div class="instrument-card">
+        <img src="https://images.unsplash.com/photo-1519892300165-cb5542fb47c7?w=400" alt="Drums">
+        <div class="info"><h4>Drums</h4><p>Rock & Fusion</p></div>
+    </div>
+    <div class="instrument-card">
+        <img src="https://images.unsplash.com/photo-1556189250-72ba954cfc2b?w=400" alt="Violin">
+        <div class="info"><h4>Violin</h4><p>Western & Indian</p></div>
+    </div>
+</div>
+
+<!-- ========== LOCATION MAP ========== -->
+<h2 class="section-title">📍 Our Academies</h2>
+<div class="map-container">
+    <div id="academyMap"></div>
+    <p style="margin-top: 10px; text-align: center; color: #555;">
+        <i class="fas fa-map-pin" style="color:#e94560;"></i> Click on marker to redirect to Google Maps
+    </p>
+</div>
+
+<!-- ========== FEE & CLASS DETAILS ========== -->
+<h2 class="section-title" id="fee">💰 Fee & Class Structure</h2>
+<div class="fee-table-container">
+    <table>
+        <thead>
+            <tr><th>Class</th><th>Instrument</th><th>Monthly Fee (₹)</th><th>Duration</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Beginner</td><td>Guitar / Piano</td><td>2500</td><td>1 hr (Mon/Wed)</td></tr>
+            <tr><td>Intermediate</td><td>Drums / Violin</td><td>3500</td><td>1.5 hr (Tue/Thu)</td></tr>
+            <tr><td>Advanced</td><td>Tabla / Sitar</td><td>4500</td><td>2 hr (Fri/Sat)</td></tr>
+            <tr><td>Vocal</td><td>Hindustani / Western</td><td>3000</td><td>1 hr (Daily)</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ========== STUDENT DASHBOARD DEMO ========== -->
+<h2 class="section-title">📊 Student Dashboard (Demo)</h2>
+<div class="dashboard-demo">
+    <h3><i class="fas fa-user-circle"></i> Welcome, Aarav (Mumbai)</h3>
+    <div class="fee-status">
+        <div class="card"><i class="fas fa-calendar"></i> This Month <div class="amount">₹2,500</div> <span style="color:#27ae60;">Paid ✓</span></div>
+        <div class="card"><i class="fas fa-exclamation-triangle" style="color:#e94560;"></i> Due (Next Month) <div class="amount">₹2,500</div> <button class="pay-btn" onclick="alert('Payment Gateway: ₹2,500 will be paid.')">Pay Now</button></div>
+        <div class="card"><i class="fas fa-history"></i> Total Paid <div class="amount">₹22,500</div></div>
+    </div>
+    <h4 style="margin:20px 0 10px;">📜 Payment History</h4>
+    <table class="history-table">
+        <thead><tr><th>Month</th><th>Amount</th><th>Status</th></tr></thead>
+        <tbody>
+            <tr><td>Jan 2026</td><td>₹2,500</td><td style="color:#27ae60;">Paid</td></tr>
+            <tr><td>Feb 2026</td><td>₹2,500</td><td style="color:#27ae60;">Paid</td></tr>
+            <tr><td>Mar 2026</td><td>₹2,500</td><td style="color:#e94560;">Pending</td></tr>
+            <tr><td>Apr 2026</td><td>₹2,500</td><td style="color:#27ae60;">Paid</td></tr>
+            <tr><td>May 2026</td><td>₹2,500</td><td style="color:#27ae60;">Paid</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ========== CONTACT SECTION ========== -->
+<div class="contact-section" id="contact">
+    <div><i class="fas fa-phone-alt fa-2x"></i> <h3>Call Us</h3> <p>+91 98765 43210</p></div>
+    <div><i class="fas fa-envelope fa-2x"></i> <h3>Email</h3> <p>info@sangeetacademy.in</p></div>
+    <div><i class="fas fa-map-marker-alt fa-2x"></i> <h3>Visit</h3> <p>Mumbai, Pune, Delhi, Bangalore</p></div>
+</div>
+
+<!-- ========== ABOUT SECTION ========== -->
+<div class="about-section" id="about">
+    <h2><i class="fas fa-music" style="color:#e94560;"></i> About Sangeet Academy</h2>
+    <p style="max-width:700px; margin:15px auto; color:#555; line-height:1.8;">
+        Established in 2010, Sangeet Academy is a premier institution for learning Indian & Western music. 
+        We have trained over 5,000 students with a focus on holistic development through music. 
+        Our gurus are highly qualified and passionate about nurturing the next generation of artists.
+    </p>
+    <p><i class="fas fa-star" style="color:#f1c40f;"></i> 4.9/5 Rating • 500+ Google Reviews</p>
+</div>
+
+<!-- ========== FOOTER ========== -->
+<footer style="background:#0f3460; color:#aaa; text-align:center; padding:20px; margin-top:30px;">
+    <p>© 2026 Sangeet Academy | Made with <i class="fas fa-heart" style="color:#e94560;"></i> for Music Lovers</p>
+</footer>
+
+<!-- ========== SCRIPTS ========== -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    // ----- MODAL CONTROLS -----
+    const loginModal = document.getElementById('loginModal');
+    const registerModal = document.getElementById('registerModal');
+    const loginOpen = document.getElementById('loginOpen');
+    const registerOpen = document.getElementById('registerOpen');
+    const loginClose = document.getElementById('loginClose');
+    const registerClose = document.getElementById('registerClose');
+    const switchToRegister = document.getElementById('switchToRegister');
+    const switchToLogin = document.getElementById('switchToLogin');
+
+    loginOpen.onclick = (e) => { e.preventDefault(); loginModal.style.display = 'flex'; };
+    registerOpen.onclick = (e) => { e.preventDefault(); registerModal.style.display = 'flex'; };
+    loginClose.onclick = () => { loginModal.style.display = 'none'; };
+    registerClose.onclick = () => { registerModal.style.display = 'none'; };
+    window.onclick = (e) => { if (e.target === loginModal) loginModal.style.display = 'none'; if (e.target === registerModal) registerModal.style.display = 'none'; };
+    switchToRegister.onclick = () => { loginModal.style.display = 'none'; registerModal.style.display = 'flex'; };
+    switchToLogin.onclick = () => { registerModal.style.display = 'none'; loginModal.style.display = 'flex'; };
+
+    // ----- MAP (Leaflet) -----
+    var map = L.map('academyMap').setView([20.5937, 78.9629], 5); // India center
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    // Academy locations (clickable)
+    var locations = [
+        { name: 'Mumbai Academy', lat: 19.0760, lng: 72.8777 },
+        { name: 'Pune Academy', lat: 18.5204, lng: 73.8567 },
+        { name: 'Delhi Academy', lat: 28.6139, lng: 77.2090 },
+        { name: 'Bangalore Academy', lat: 12.9716, lng: 77.5946 }
+    ];
+
+    locations.forEach(loc => {
+        var marker = L.marker([loc.lat, loc.lng]).addTo(map);
+        marker.bindPopup(`<b>${loc.name}</b><br><a href="https://www.google.com/maps?q=${loc.lat},${loc.lng}" target="_blank">📍 Open in Google Maps</a>`);
+    });
+
+    // ----- AUTO SLIDER (already via CSS) -----
+
+    // Demo: Alert for Pay button (already inline)
+    console.log('🎵 Sangeet Academy website ready!');
+</script>
+
+</body>
+</html>
